@@ -56,9 +56,9 @@ public class Destop2 implements ActionListener {
 	private Button chat, stop, clear, send;
 	private JTextArea sendContext;
 	public List textList, Connectedlist;
+
 	// 连接服务器的socket
 	private Socket client;
-	
 
 	public void initFrame() {
 		mainframe = new Frame(StringValue.chat);
@@ -250,24 +250,26 @@ public class Destop2 implements ActionListener {
 		String name = e.getActionCommand();
 		switch (name) {
 		case "开始聊天":
-			if (textIP.getText().equals("") || textPort.getText().equals(""))
+			if (textIP.getText().equals("") || textPort.getText().equals("")) {
 				JOptionPane.showMessageDialog(null, "IP或端口不能为空" + textIP.getText());
-			else {
+			} else {
 				String ip = textIP.getText();
 				int port = Integer.parseInt(textPort.getText());
 
 				try {
 					client = new Socket(InetAddress.getLocalHost(), port);
 					ChangeButtonSta(false, true);
+					
 				} catch (Exception e1) {
 					System.out.println("........chen8");
 				}
+
 				new Thread(new Runnable() {
 
 					@Override
 					public void run() {
 						// TODO Auto-generated method stub
-						while (client.isConnected()) {
+						while (client.isClosed()) {
 							System.out.println("is socket connected" + client.isConnected());
 							InputStreamReader reader;
 							try {
@@ -297,9 +299,10 @@ public class Destop2 implements ActionListener {
 			break;
 		case "断开":
 			try {
+				
 				client.close();
-				ChangeButtonSta(false, true);
-			} catch (IOException e1) {
+				ChangeButtonSta(true, false);
+			} catch (Exception e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}

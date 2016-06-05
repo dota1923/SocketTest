@@ -29,20 +29,22 @@ public class ClientThread implements Runnable {
 
 	// get information from client
 	public String getMsg() throws IOException {
+		if (client.isClosed()) {
+			return null;
 
-		InputStreamReader input = new InputStreamReader(client.getInputStream());
-		
-		BufferedReader reader = new BufferedReader(input);
-		String msg = reader.readLine();
-	/*	StringBuilder msg = new StringBuilder();
-		String temp;
-		int index;
-		while ((temp = reader.readLine()) != null) {
-			msg.append(temp);
-		}*/
-		
+		} else {
+			InputStreamReader input = new InputStreamReader(client.getInputStream());
 
-		return (msg.toString());
+			BufferedReader reader = new BufferedReader(input);
+			String msg = reader.readLine();
+			/*
+			 * StringBuilder msg = new StringBuilder(); String temp; int index;
+			 * while ((temp = reader.readLine()) != null) { msg.append(temp); }
+			 */
+
+			return (msg.toString());
+
+		}
 
 	}
 
@@ -51,10 +53,8 @@ public class ClientThread implements Runnable {
 
 		OutputStreamWriter output = new OutputStreamWriter(client.getOutputStream());
 
-		output.write(msg+"\n");
+		output.write(msg + "\n");
 		output.flush();
-
-		
 
 	}
 
@@ -62,15 +62,14 @@ public class ClientThread implements Runnable {
 	public void run() {
 		// TODO Auto-generated method stub
 		initInfo();
-		for (;;) {
+		while(client.isClosed()) {
 
 			try {
 				Destop2.getInstance().textList.add(getMsg());
-				
+
 				System.out.println("clientthread run");
 				System.out.println("clientThread:-->" + getMsg());
 				response("我是服务器，吃过了吗？");
-				
 
 			} catch (Exception e) {
 				// TODO Auto-generated catch block

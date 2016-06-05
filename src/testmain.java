@@ -14,7 +14,7 @@ public class testmain   {
 		boolean flag = true;
 		Destop2 destop = Destop2.getInstance();
 		destop.initFrame();
-		int ServerPort = 7003;
+		int ServerPort = 6009;
 		//监听本机指定的端口号
 		ServerSocket server = new ServerSocket(ServerPort);
 		while (flag) {
