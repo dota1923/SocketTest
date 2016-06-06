@@ -11,6 +11,8 @@ import java.awt.TextArea;
 import java.awt.TextField;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -59,6 +61,7 @@ public class Destop2 implements ActionListener {
 
 	// 连接服务器的socket
 	private Socket client;
+	private Vector<Socket> socketList;
 
 	public void initFrame() {
 		mainframe = new Frame(StringValue.chat);
@@ -195,13 +198,9 @@ public class Destop2 implements ActionListener {
 		Label chatList = new Label("私聊列表");
 		chatList.setBounds(510, 10, 60, 20);
 
-		Connectedlist = new List(20);
+		Connectedlist = new List();
 		Connectedlist.setBounds(500, 35, 80, 240);
 		Connectedlist.setVisible(true);
-		Connectedlist.addItemListener(new MyItemListener());
-
-		Connectedlist.add("第一项");
-		Connectedlist.add("第二项");
 
 		clear = new Button("清屏");
 		clear.setBounds(510, 310, 60, 20);
@@ -250,56 +249,19 @@ public class Destop2 implements ActionListener {
 		String name = e.getActionCommand();
 		switch (name) {
 		case "开始聊天":
-			if (textIP.getText().equals("") || textPort.getText().equals("")) {
-				JOptionPane.showMessageDialog(null, "IP或端口不能为空" + textIP.getText());
-			} else {
-				String ip = textIP.getText();
-				int port = Integer.parseInt(textPort.getText());
-
-				try {
-					client = new Socket(InetAddress.getLocalHost(), port);
-					ChangeButtonSta(false, true);
-					
-				} catch (Exception e1) {
-					System.out.println("........chen8");
-				}
-
-				new Thread(new Runnable() {
-
-					@Override
-					public void run() {
-						// TODO Auto-generated method stub
-						while (client.isClosed()) {
-							System.out.println("is socket connected" + client.isConnected());
-							InputStreamReader reader;
-							try {
-
-								reader = new InputStreamReader(client.getInputStream());
-								BufferedReader buf = new BufferedReader(reader);
-								String msg = buf.readLine();
-								if (msg != null) {
-									System.out.println("server:" + msg.toString());
-									String ContextMsg = "来自:" + client.getRemoteSocketAddress() + "\n" + msg.toString();
-									textList.add(ContextMsg);
-
-								}
-
-							} catch (IOException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
-
-						}
-
-					}
-				}).start();
+			if (!(Boolean.logicalXor((textIP.getText().equals("")), (textGroup.getText().equals(""))))
+					|| (textPort.getText().equals(""))) {
+				JOptionPane.showMessageDialog(null, "地址或端口不能为空");
+			} else if (textGroup.getText().equals("")) {
+				connectedToSocket();
+			} else if (textIP.getText().equals("")) {
 
 			}
 
 			break;
 		case "断开":
 			try {
-				
+				// sendMsg("123");
 				client.close();
 				ChangeButtonSta(true, false);
 			} catch (Exception e1) {
@@ -312,37 +274,91 @@ public class Destop2 implements ActionListener {
 			textList.removeAll();
 			break;
 		case "发送":
-			if (chat.isEnabled() || !client.isConnected()) {
+			if (chat.isEnabled() || client.isClosed()) {
+
 				JOptionPane.showMessageDialog(null, "还没连接，发送消息失败");
 
 			} else {
-				// 发送信息
-				try {
-
-					PrintWriter writer = new PrintWriter(client.getOutputStream());
-					writer.write(sendContext.getText() + "\n");
-					writer.flush();
-
-				} catch (Exception e2) {
-					// TODO Auto-generated catch block
-					System.out.println("写入失败");
-					e2.printStackTrace();
-				}
-				Date currentTime = new Date();
-				SimpleDateFormat formatter = new SimpleDateFormat("MM/dd HH:mm");
-				String dateString = formatter.format(currentTime);
-				String ContextMsg = "本机:" + dateString + "\n" + sendContext.getText();
-				System.out.println(ContextMsg);
-				textList.add(ContextMsg);
-				sendContext.setText(null);
-
+				sendMsg(sendContext.getText());
 			}
-
 			break;
 		default:
+			System.out.println("--------3------");
 			break;
 
 		}
+
+	}
+
+	// 连接到一个serversockket
+	private void connectedToSocket() {
+		String ip = textIP.getText();
+		int port = Integer.parseInt(textPort.getText());
+
+		try {
+			client = new Socket(InetAddress.getLocalHost(), port);
+			ChangeButtonSta(false, true);
+
+		} catch (Exception e1) {
+			System.out.println("........chen8");
+		}
+
+		new Thread(new Runnable() {
+
+			@Override
+			public void run() {
+				// TODO Auto-generated method stub
+				while (!client.isClosed()) {
+					System.out.println("is socket connected" + client.isConnected());
+					InputStreamReader reader;
+					try {
+
+						reader = new InputStreamReader(client.getInputStream());
+						BufferedReader buf = new BufferedReader(reader);
+						String msg = buf.readLine();
+						if (msg != null) {
+							System.out.println("server:" + msg.toString());
+							String ContextMsg = "来自被连接的回复:" + client.getInetAddress() + "\n" + msg.toString();
+							textList.add(ContextMsg);
+
+						}
+
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+
+				}
+
+			}
+		}).start();
+
+	}
+
+	private void sendMsg(String msg) {
+		// 发送信息
+		try {
+
+			PrintWriter writer = new PrintWriter(client.getOutputStream());
+			writer.write(msg + "\n");
+			writer.flush();
+
+		} catch (Exception e2) {
+			// TODO Auto-generated catch block
+			System.out.println("写入失败");
+			e2.printStackTrace();
+		}
+		Date currentTime = new Date();
+		SimpleDateFormat formatter = new SimpleDateFormat("MM/dd HH:mm");
+		String dateString = formatter.format(currentTime);
+		String ContextMsg = "本机:" + dateString + "\n" + sendContext.getText();
+		System.out.println(ContextMsg);
+		textList.add(ContextMsg);
+		sendContext.setText(null);
+
+	}
+
+	private void connectedToGroup() {
 
 	}
 

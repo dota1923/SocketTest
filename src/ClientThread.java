@@ -27,25 +27,28 @@ public class ClientThread implements Runnable {
 
 	}
 
-	// get information from client
-	public String getMsg() throws IOException {
-		if (client.isClosed()) {
-			return null;
+	public InetAddress getIp() {
+		return ip;
+	}
 
-		} else {
-			InputStreamReader input = new InputStreamReader(client.getInputStream());
+	public void setIp(InetAddress ip) {
+		this.ip = ip;
+	}
 
-			BufferedReader reader = new BufferedReader(input);
-			String msg = reader.readLine();
-			/*
-			 * StringBuilder msg = new StringBuilder(); String temp; int index;
-			 * while ((temp = reader.readLine()) != null) { msg.append(temp); }
-			 */
+	public int getPort() {
+		return port;
+	}
 
-			return (msg.toString());
+	public void setPort(int port) {
+		this.port = port;
+	}
 
-		}
+	public long getThreadNum() {
+		return ThreadNum;
+	}
 
+	public void setThreadNum(long threadNum) {
+		ThreadNum = threadNum;
 	}
 
 	// response to the client
@@ -58,18 +61,47 @@ public class ClientThread implements Runnable {
 
 	}
 
+	boolean connected = true;
+	String msg;
+
+	// get information from client
+	public String getMsg() {
+
+		InputStreamReader input;
+		try {
+			input = new InputStreamReader(client.getInputStream());
+			BufferedReader reader = new BufferedReader(input);
+			msg = reader.readLine();
+
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+
+		}
+		System.out.println(msg);
+		return (msg);
+
+	}
+
 	@Override
 	public void run() {
 		// TODO Auto-generated method stub
 		initInfo();
-		while(client.isClosed()) {
+
+		while (!client.isClosed()) {
 
 			try {
-				Destop2.getInstance().textList.add(getMsg());
+				if (getMsg()==null) {
+					System.out.println("socket 关闭");
+					client.close();
 
-				System.out.println("clientthread run");
-				System.out.println("clientThread:-->" + getMsg());
-				response("我是服务器，吃过了吗？");
+				} else {
+					Destop2.getInstance().textList.add("来自主动连接：" + ip + '\n' + getMsg());
+
+					System.out.println("clientthread run");
+					System.out.println("clientThread:-->" + getMsg());
+				}
+				// response("我是服务器，吃过了吗？");
 
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
@@ -78,6 +110,7 @@ public class ClientThread implements Runnable {
 
 			}
 		}
+		System.out.println("end------");
 
 	}
 
