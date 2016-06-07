@@ -18,6 +18,7 @@ public class ClientThread implements Runnable {
 		this.client = client;
 
 	}
+	
 
 	// init info of the thread
 	public void initInfo() {
@@ -60,6 +61,7 @@ public class ClientThread implements Runnable {
 		output.flush();
 
 	}
+	
 
 	boolean connected = true;
 	String msg;

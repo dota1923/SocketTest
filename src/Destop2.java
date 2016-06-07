@@ -28,6 +28,7 @@ import java.net.UnknownHostException;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Vector;
 
 import javax.swing.DefaultListModel;
@@ -58,10 +59,17 @@ public class Destop2 implements ActionListener {
 	private Button chat, stop, clear, send;
 	private JTextArea sendContext;
 	public List textList, Connectedlist;
+	//是否回复
+	boolean respond = false;
 
 	// 连接服务器的socket
 	private Socket client;
 	private Vector<Socket> socketList;
+	private HashMap<String, Socket> socketMap = new HashMap<String, Socket>();
+	public HashMap<String, Socket> getHashMap(){
+		return socketMap;
+	}
+
 
 	public void initFrame() {
 		mainframe = new Frame(StringValue.chat);
@@ -182,6 +190,7 @@ public class Destop2 implements ActionListener {
 		head.add(stop);
 
 	}
+	
 
 	private void initBody() {
 		body = new Panel();
@@ -199,6 +208,37 @@ public class Destop2 implements ActionListener {
 		chatList.setBounds(510, 10, 60, 20);
 
 		Connectedlist = new List();
+		Connectedlist.add("第一项");
+		Connectedlist.add("第二项");
+		Connectedlist.add("第三项");
+		
+		Connectedlist.addItemListener(new ItemListener() {
+			
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				// TODO Auto-generated method stub
+				
+				String item = e.getItem().toString();
+				String item2 = Connectedlist.getSelectedItem();
+				respond = true;
+				
+				
+				int stateChange = e.getStateChange();
+				if (stateChange == ItemEvent.SELECTED) {
+					System.out.println("此次事件由选中“" + item + "”触发！");
+					//直接将client赋值为当前获得的socket，用于回复
+					client = socketMap.get(item2);
+					
+					
+					
+				} else if (stateChange == ItemEvent.DESELECTED) {
+					System.out.println("此次事件由取消选中“" + item + "”触发！");
+				} else {
+					System.out.println("此次事件由其它原因触发！");
+				}
+				
+			}
+		});
 		Connectedlist.setBounds(500, 35, 80, 240);
 		Connectedlist.setVisible(true);
 
@@ -227,9 +267,7 @@ public class Destop2 implements ActionListener {
 		// TextField sendContext = new TextField();
 		sendContext = new JTextArea();
 		sendContext.setLineWrap(true);
-
 		sendContext.setEditable(true);
-
 		sendContext.setBounds(20, 35, 450, 200);
 
 		send = new Button("发送");
@@ -253,6 +291,7 @@ public class Destop2 implements ActionListener {
 					|| (textPort.getText().equals(""))) {
 				JOptionPane.showMessageDialog(null, "地址或端口不能为空");
 			} else if (textGroup.getText().equals("")) {
+				respond = false;
 				connectedToSocket();
 			} else if (textIP.getText().equals("")) {
 
@@ -261,7 +300,6 @@ public class Destop2 implements ActionListener {
 			break;
 		case "断开":
 			try {
-				// sendMsg("123");
 				client.close();
 				ChangeButtonSta(true, false);
 			} catch (Exception e1) {
@@ -274,7 +312,10 @@ public class Destop2 implements ActionListener {
 			textList.removeAll();
 			break;
 		case "发送":
-			if (chat.isEnabled() || client.isClosed()) {
+			if ((chat.isEnabled() || client.isClosed())&&!respond) {
+				System.out.println("chat.isEnabled:"+chat.isEnabled());
+				System.out.println("client.isclosed:"+client.isClosed());
+				System.out.println("respond:"+respond);
 
 				JOptionPane.showMessageDialog(null, "还没连接，发送消息失败");
 

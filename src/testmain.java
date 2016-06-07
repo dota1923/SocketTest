@@ -8,6 +8,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Vector;
 
@@ -19,6 +20,7 @@ public class testmain {
 		Destop2 destop = Destop2.getInstance();
 		destop.initFrame();
 		int ServerPort = 6011;
+		HashMap<String, Socket> socketMap = destop.getHashMap();
 
 		// 监听本机指定的端口号
 		ServerSocket server = new ServerSocket(ServerPort);
@@ -28,14 +30,15 @@ public class testmain {
 				Socket apt = server.accept();
 				List chatList = destop.getConnectedList();
 
-				chatList.add(apt.getInetAddress().toString());
-				
-
 				// 创建线程处理访问信息
 				ClientThread client = new ClientThread(apt);
 				Thread temp = new Thread(client);
-
 				temp.start();
+				String lable;
+				lable = apt.getInetAddress().toString() + "\n" + temp.getId();
+				chatList.add(lable);
+				//将每个线程的socket存入map中
+				socketMap.put(lable,apt);
 			} catch (IOException e) {
 
 			}
